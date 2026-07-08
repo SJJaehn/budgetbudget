@@ -40,6 +40,7 @@ export default function MonthContainer(props: Props) {
               month={month}
               data={data}
               numberFormatter={numberFormatter}
+              onCopyPrevMonth={actions.copyPrevMonthBudget}
             />
           </Header>
           {data ? (

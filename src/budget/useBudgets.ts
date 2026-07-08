@@ -6,25 +6,33 @@ import { formatDateKey, roundWithFractions, getToday } from '../lib';
 import getMonthData from './getMonthData';
 import { Transaction, Category, calculateBalances } from '../moneymoney';
 import { BudgetState, MonthData, InterMonthData } from './Types';
+import { BudgetDisplayCategory } from './deriveBudgetCategories';
 
 const EMPTY_TRANSACTIONS: Transaction[] = [];
 
 export default function useBudgets(
   transactions: Transaction[] = EMPTY_TRANSACTIONS,
-  categories: Category[] = [],
+  categories: BudgetDisplayCategory[] = [],
   defaultCategories: Category[] = [],
   {
     budgets,
     settings: { incomeCategories, fractionDigits, startBalance, startDate, ignorePendingTransactions },
   }: BudgetState,
+  remap: { [uuid: string]: string } = {},
 ): [MonthData[], (add: number) => void] {
   const defaultCategoryIds = useMemo(
     () => defaultCategories.map(({ uuid }) => uuid),
     [defaultCategories],
   );
   const balances = useMemo(
-    () => calculateBalances(transactions, defaultCategoryIds, ignorePendingTransactions),
-    [transactions, defaultCategoryIds, ignorePendingTransactions],
+    () =>
+      calculateBalances(
+        transactions,
+        defaultCategoryIds,
+        ignorePendingTransactions,
+        remap,
+      ),
+    [transactions, defaultCategoryIds, ignorePendingTransactions, remap],
   );
   const getInitial = useMemo(() => {
     const initial: InterMonthData = {

@@ -1,16 +1,22 @@
 import React, { MutableRefObject, useCallback, Dispatch } from 'react';
+import classNames from 'classnames';
 import { Sidebar, Row } from '../../components';
-import { Category } from '../../moneymoney';
 import styles from './CategorySidebar.module.scss';
-import { Action, ACTION_SETTINGS_SET_CATEGORY_COLLAPSED } from '../../budget';
-import { mapCategories } from '../../lib';
+import {
+  Action,
+  ACTION_SETTINGS_SET_CATEGORY_COLLAPSED,
+  ACTION_SETTINGS_SET_CATEGORY_EXPANDED,
+  BudgetDisplayCategory,
+} from '../../budget';
+import { mapCategories, filterExpanded } from '../../lib';
 
 type Props = {
-  categories: Category[];
+  categories: BudgetDisplayCategory[];
   innerRef: MutableRefObject<HTMLDivElement | null>;
   syncScrollY: MutableRefObject<HTMLDivElement | null>;
   budgetName: string;
   collapsedCategories?: string[];
+  expandedCategories?: string[];
   dispatch: Dispatch<Action>;
 };
 export default function CategorySidebar({
@@ -18,6 +24,7 @@ export default function CategorySidebar({
   innerRef,
   budgetName,
   collapsedCategories = [],
+  expandedCategories = [],
   dispatch,
   syncScrollY,
 }: Props) {
@@ -53,6 +60,30 @@ export default function CategorySidebar({
     },
     [dispatch],
   );
+  const expandCategory = useCallback(
+    (ev: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      dispatch({
+        type: ACTION_SETTINGS_SET_CATEGORY_EXPANDED,
+        payload: {
+          id: (ev.target as HTMLButtonElement).name,
+          expanded: true,
+        },
+      });
+    },
+    [dispatch],
+  );
+  const collapseCategory = useCallback(
+    (ev: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      dispatch({
+        type: ACTION_SETTINGS_SET_CATEGORY_EXPANDED,
+        payload: {
+          id: (ev.target as HTMLButtonElement).name,
+          expanded: false,
+        },
+      });
+    },
+    [dispatch],
+  );
 
   return (
     <div className={styles.sidebarWrap}>
@@ -65,9 +96,10 @@ export default function CategorySidebar({
         className={styles.categorySidebar}
       >
         {mapCategories(
-          categories,
+          filterExpanded(categories, expandedCategories),
           collapsedCategories,
-          ({ uuid, name, group, indentation, icon }, i, groupClosed) => {
+          (category, i, groupClosed) => {
+            const { uuid, name, group, indentation, icon } = category;
             return (
               <Row
                 key={uuid}
@@ -75,15 +107,40 @@ export default function CategorySidebar({
                 leaf={!group}
                 odd={!(i % 2)}
                 groupClosed={groupClosed}
-                className={styles.row}
+                className={classNames(
+                  styles.row,
+                  category.readOnly && styles.readOnlyRow,
+                )}
               >
-                {!group && (
+                {!group && !category.readOnly && (
                   <span
                     style={{ backgroundImage: `url(${icon})` }}
                     className={styles.icon}
                   />
                 )}
                 <span className={styles.title}>{name}</span>
+                {category.aggregate && (
+                  <>
+                    <span className={styles.spacer} />
+                    {expandedCategories.includes(uuid) ? (
+                      <button
+                        className={styles.showHide}
+                        name={uuid}
+                        onClick={collapseCategory}
+                      >
+                        Hide details
+                      </button>
+                    ) : (
+                      <button
+                        className={styles.showHide}
+                        name={uuid}
+                        onClick={expandCategory}
+                      >
+                        Show details
+                      </button>
+                    )}
+                  </>
+                )}
                 {group && (
                   <>
                     <span className={styles.spacer} />

@@ -7,6 +7,7 @@ export type Props = {
   dispatch: Dispatch<Action>;
   monthKey: string;
   collapsedCategories?: string[];
+  expandedCategories?: string[];
   date: Date;
   categories: Category[];
   numberFormatter: NumberFormatter;

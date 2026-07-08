@@ -31,6 +31,12 @@
   overflow: hidden;
   white-space: nowrap;
 }
+.readOnlyRow {
+  .title {
+    color: var(--secondary-color);
+    font-style: italic;
+  }
+}
 
 .sidebarWrap {
   border-right: 1px solid var(--element-border-color);

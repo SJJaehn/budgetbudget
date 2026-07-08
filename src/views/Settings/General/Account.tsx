@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import classNames from 'classnames';
 import { useInputProps } from '../../../lib';
+import { Button } from '../../../components';
 import styles from '../Settings.module.scss';
 import { Props } from './Types';
 import { ACTION_SETTINGS_SET_SELECTED_ACCOUNTS } from '../../../budget';
@@ -34,8 +35,24 @@ export default function AccountSettings({
     ),
   });
 
+  const selectable = allAccounts
+    .filter(({ group, portfolio }) => !group && !portfolio)
+    .map(({ uuid }) => uuid);
+  const allSelected =
+    selectable.length > 0 && selectable.every((uuid) => value.includes(uuid));
+
   return (
     <>
+      {selectable.length > 0 && (
+        <Button
+          className={styles.selectAllButton}
+          onClick={() =>
+            onChange({ target: { value: allSelected ? [] : selectable } })
+          }
+        >
+          {allSelected ? 'Deselect all' : 'Select all'}
+        </Button>
+      )}
       <ul className={styles.accountList}>
         {allAccounts.length === 0 && (
           <p className={classNames(styles.error, styles.noAccountsError)}>

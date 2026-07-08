@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { Transaction, Category, MoneyMoneyRes } from '../moneymoney';
 import { BudgetState } from './Types';
 import useBudgets from './useBudgets';
+import deriveBudgetCategories from './deriveBudgetCategories';
 
 function transactionsLoaded(
   transactions: Transaction[] | Error | null,
@@ -19,7 +20,7 @@ export default function useBudgetData(
   state: BudgetState,
   { readCategories, readTransactions }: MoneyMoneyRes,
 ) {
-  const { incomeCategories } = state.settings;
+  const { incomeCategories, budgetCategories } = state.settings;
 
   const transactions = readTransactions();
   const [categories, defaultCategories] = readCategories();
@@ -33,16 +34,22 @@ export default function useBudgetData(
     return categories.filter(({ uuid }) => !incomeCategoryIds.includes(uuid));
   }, [incomeCategories, categories]);
 
+  const { categories: displayCategories, remap } = useMemo(
+    () => deriveBudgetCategories(usableCategories, budgetCategories),
+    [usableCategories, budgetCategories],
+  );
+
   const [months, extendFuture] = useBudgets(
     transactionsLoaded(transactions) ? transactions : undefined,
-    usableCategories,
+    displayCategories,
     defaultCategories,
     state,
+    remap,
   );
 
   return {
     months,
-    categories: usableCategories,
+    categories: displayCategories,
     extendFuture,
   };
 }

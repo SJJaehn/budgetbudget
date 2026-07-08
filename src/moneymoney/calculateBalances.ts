@@ -4,7 +4,8 @@ import { formatDateKey } from '../lib';
 export default function calculateBalances(
   transactions: Transaction[],
   defaultCategoryIds: string[],
-  ignorePendingTransactions: boolean
+  ignorePendingTransactions: boolean,
+  remap: { [uuid: string]: string } = {},
 ): Balances {
   return transactions.reduce((memo, transaction) => {
     if (!transaction.booked && ignorePendingTransactions) {
@@ -32,13 +33,14 @@ export default function calculateBalances(
     if (defaultCategoryIds.includes(categoryId)) {
       amount = balance.uncategorised;
     } else {
-      if (!balance.categories[categoryId]) {
-        balance.categories[categoryId] = {
+      const bucket = remap[categoryId] || categoryId;
+      if (!balance.categories[bucket]) {
+        balance.categories[bucket] = {
           amount: 0,
           transactions: [],
         };
       }
-      amount = balance.categories[categoryId];
+      amount = balance.categories[bucket];
     }
     amount.amount += transaction.amount;
     amount.transactions.push(transaction);

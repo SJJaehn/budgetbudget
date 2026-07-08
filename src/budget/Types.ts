@@ -3,8 +3,8 @@ import {
   Balance,
   Transaction,
   AmountWithTransactions,
-  Category as MoneyMoneyCategory,
 } from '../moneymoney';
+import { BudgetDisplayCategory } from './deriveBudgetCategories';
 import { isLeft } from 'fp-ts/lib/Either';
 import { ThrowReporter } from 'io-ts/lib/ThrowReporter';
 import semver from 'semver';
@@ -57,6 +57,13 @@ const optionalSettingsShape = t.partial(
     /** @deprecated */
     numberLocale: t.string,
     collapsedCategories: t.array(t.string),
+    /**
+     * Explicitly selected categories/folders to budget.
+     * `undefined` means "budget every category individually" (default).
+     */
+    budgetCategories: t.array(t.string),
+    /** aggregate folders whose read-only subcategory breakdown is expanded */
+    expandedCategories: t.array(t.string),
   },
   'optionalSettings',
 );
@@ -126,6 +133,11 @@ export type BudgetCategoryRow = Omit<BudgetCategoryGroup, 'group'> & {
   overspendRollover: boolean;
   group: false;
   transactions: Transaction[];
+  /** budgetable aggregate line for a selected folder */
+  aggregate?: boolean;
+  /** read-only subcategory row shown under an aggregate line */
+  readOnly?: boolean;
+  aggregateParent?: string;
 };
 export type OverspendRollover = { [key: string]: boolean };
 export type Rollover = { total: number; [key: string]: number };
@@ -152,7 +164,7 @@ export type MonthDataGetter<R> = (
   getInitial: () => InterMonthData,
   balance: Balance | undefined,
   budget: Budget | undefined,
-  categories: MoneyMoneyCategory[],
+  categories: BudgetDisplayCategory[],
   incomeCategories: IncomeCategory[],
   round: (value: number) => number,
 ) => R;

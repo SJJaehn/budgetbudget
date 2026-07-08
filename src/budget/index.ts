@@ -15,6 +15,11 @@ export * from './budgetReducer';
 export { VERSION } from './Types';
 export { default as useBudgetData } from './useBudgetData';
 export {
+  default as deriveBudgetCategories,
+  OTHERS_UUID,
+} from './deriveBudgetCategories';
+export type { BudgetDisplayCategory } from './deriveBudgetCategories';
+export {
   default as getInitData,
   initialInitDataRes,
   initialInitData,

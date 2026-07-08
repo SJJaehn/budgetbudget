@@ -5,7 +5,7 @@ import { BudgetCategoryRow, BudgetCategoryGroup } from '../../budget';
 import { Row } from '../../components';
 import { Props } from './Types';
 import styles from './Month.module.scss';
-import { NumberFormatter, mapCategories } from '../../lib';
+import { NumberFormatter, mapCategories, filterExpanded } from '../../lib';
 import { ActionCreators } from './useActions';
 import BudgetInput from './BudgetInput';
 
@@ -30,6 +30,7 @@ function BudgetRow({
   budgeted,
   spend,
   balance,
+  readOnly,
   actions: { setBudgeted, toggleRollover },
   indentation,
 }: BudgetRowProps) {
@@ -60,7 +61,7 @@ function BudgetRow({
   return (
     <Row
       odd={odd}
-      className={styles.budgetRow}
+      className={classNames(styles.budgetRow, readOnly && styles.readOnlyRow)}
       indent={indentation}
       leaf={true}
       aria-label={name}
@@ -71,12 +72,14 @@ function BudgetRow({
         aria-label="budgeted"
         className={classNames(budgeted === 0 && styles.zero)}
       >
-        <BudgetInput
-          onChange={setBudgeted}
-          value={budgeted}
-          categoryId={uuid}
-          numberFormatter={numberFormatter}
-        />
+        {!readOnly && (
+          <BudgetInput
+            onChange={setBudgeted}
+            value={budgeted}
+            categoryId={uuid}
+            numberFormatter={numberFormatter}
+          />
+        )}
       </span>
       <span
         role="gridcell"
@@ -88,13 +91,13 @@ function BudgetRow({
       <span
         role="gridcell"
         aria-label="balance"
-        onContextMenu={showContextMenu}
+        onContextMenu={readOnly ? undefined : showContextMenu}
         className={classNames(
           balance === 0 && styles.zero,
           balance < 0 && styles.negativeBalance,
         )}
       >
-        {format(balance)}
+        {readOnly ? '' : format(balance)}
       </span>
     </Row>
   );
@@ -105,12 +108,13 @@ export default function Categories({
   numberFormatter,
   actions,
   collapsedCategories = [],
+  expandedCategories = [],
 }: CategoriesProps) {
   const { format } = numberFormatter;
   return (
     <div role="grid">
       {mapCategories(
-        budgetCategories,
+        filterExpanded(budgetCategories, expandedCategories),
         collapsedCategories,
         (entry, i, groupClosed) => {
           if (entry.group) {

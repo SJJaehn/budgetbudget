@@ -6,6 +6,7 @@ import subMonths from 'date-fns/subMonths';
 import styles from './Month.module.scss';
 import { Props as CommonProps } from './Types';
 import { MonthData, DetailedMonthData } from '../../budget';
+import { Button } from '../../components';
 
 function ListItem({
   amount,
@@ -27,11 +28,13 @@ function ListItem({
 type Props = {
   month: MonthData;
   data?: DetailedMonthData;
+  onCopyPrevMonth: () => void;
 } & Pick<CommonProps, 'numberFormatter'>;
 export default function Overview({
   month: { name, date },
   data,
   numberFormatter,
+  onCopyPrevMonth,
 }: Props) {
   const budgetClasses = data
     ? classNames(
@@ -47,7 +50,21 @@ export default function Overview({
 
   return (
     <div>
-      <h3 className={styles.title}>{name}</h3>
+      <div className={styles.titleRow}>
+        <h3 className={styles.title}>{name}</h3>
+        {data && (
+          <Button
+            className={styles.copyPrevMonthButton}
+            onClick={onCopyPrevMonth}
+            title={`Fill empty categories with the budget from ${format(
+              subMonths(date, 1),
+              'MMMM',
+            )}`}
+          >
+            Copy {format(subMonths(date, 1), 'MMM')}
+          </Button>
+        )}
+      </div>
       {data && (
         <>
           <ul

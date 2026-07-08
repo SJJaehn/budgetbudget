@@ -23,6 +23,7 @@ export {
 export { default as useMenu } from './useMenu';
 export { default as useSave, unsaved } from './useSave';
 export { default as mapCategories } from './mapCategories';
+export { default as filterExpanded } from './filterExpanded';
 export { default as parseBudgetInput } from './parseBudgetInput';
 export { useRecentFiles } from './useRecentFiles';
 export {

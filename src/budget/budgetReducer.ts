@@ -1,6 +1,7 @@
+import subMonths from 'date-fns/subMonths';
 import { BudgetState, Category, IncomeCategory, VERSION } from './Types';
 import { useCallback, useReducer } from 'react';
-import { initialSettings, unsaved } from '../lib';
+import { initialSettings, unsaved, formatDateKey } from '../lib';
 
 export const INITIAL_STATE = unsaved({
   name: '',
@@ -44,9 +45,18 @@ export const ACTION_SETTINGS_SET_INCOME_AVAILABLE_IN = Symbol(
 export const ACTION_SETTINGS_SET_CATEGORY_COLLAPSED = Symbol(
   'ACTION_SETTINGS_SET_CATEGORY_COLLAPSED',
 );
+export const ACTION_SETTINGS_SET_CATEGORY_EXPANDED = Symbol(
+  'ACTION_SETTINGS_SET_CATEGORY_EXPANDED',
+);
+export const ACTION_SETTINGS_SET_BUDGET_CATEGORIES = Symbol(
+  'ACTION_SETTINGS_SET_BUDGET_CATEGORIES',
+);
 export const ACTION_SET_CATEGORY_VALUE = Symbol('ACTION_SET_CATEGORY_VALUE');
 export const ACTION_SET_CATEGORY_ROLLOVER = Symbol(
   'ACTION_SET_CATEGORY_ROLLOVER',
+);
+export const ACTION_COPY_PREV_MONTH_BUDGET = Symbol(
+  'ACTION_COPY_PREV_MONTH_BUDGET',
 );
 
 type MonthCategory = {
@@ -64,6 +74,12 @@ type SetCategoryRolloverAction = {
   type: typeof ACTION_SET_CATEGORY_ROLLOVER;
   payload: MonthCategory & {
     rollover: boolean;
+  };
+};
+type CopyPrevMonthBudgetAction = {
+  type: typeof ACTION_COPY_PREV_MONTH_BUDGET;
+  payload: {
+    monthKey: string;
   };
 };
 type SetNameAction = {
@@ -115,11 +131,22 @@ type SetSettingsCurrency = {
   type: typeof ACTION_SETTINGS_SET_CURRENCY;
   payload: string;
 };
+type SetSettingsBudgetCategories = {
+  type: typeof ACTION_SETTINGS_SET_BUDGET_CATEGORIES;
+  payload: string[];
+};
 type SetSettingsCategoryCollapsedAction = {
   type: typeof ACTION_SETTINGS_SET_CATEGORY_COLLAPSED;
   payload: {
     id: string;
     collapsed: boolean;
+  };
+};
+type SetSettingsCategoryExpandedAction = {
+  type: typeof ACTION_SETTINGS_SET_CATEGORY_EXPANDED;
+  payload: {
+    id: string;
+    expanded: boolean;
   };
 };
 type InitAction = {
@@ -130,6 +157,8 @@ export type Action =
   | InitAction
   | SetCategoryValueAction
   | SetCategoryRolloverAction
+  | CopyPrevMonthBudgetAction
+  | SetSettingsBudgetCategories
   | SetNameAction
   | SetSettingsFractionDigits
   | SetSettingsIgnorePendingTransactions
@@ -140,6 +169,7 @@ export type Action =
   | UpdateSettingsIncomeCategory
   | SetSettingsIncomeAvailableIn
   | SetSettingsCategoryCollapsedAction
+  | SetSettingsCategoryExpandedAction
   | RemoveSettingsIncomeCategory
   | AddSettingsIncomeCategory;
 
@@ -178,6 +208,47 @@ function updateCategory(
   return {
     ...state,
     budgets,
+  };
+}
+
+function copyPrevMonthBudget(
+  state: BudgetState,
+  monthKey: string,
+): BudgetState {
+  const prevKey = formatDateKey(subMonths(new Date(monthKey), 1));
+  const prevCategories = state.budgets[prevKey]?.categories;
+  if (!prevCategories) {
+    return state;
+  }
+  const currentCategories =
+    state.budgets[monthKey]?.categories || {};
+
+  const newCategories = { ...currentCategories };
+  let changed = false;
+  Object.entries(prevCategories).forEach(([uuid, category]) => {
+    const amount = category?.amount;
+    if (amount === undefined) {
+      return;
+    }
+    /* only fill categories that have no amount set for this month */
+    if (newCategories[uuid]?.amount !== undefined) {
+      return;
+    }
+    newCategories[uuid] = { ...newCategories[uuid], amount };
+    changed = true;
+  });
+
+  if (!changed) {
+    return state;
+  }
+
+  const { [monthKey]: monthlyBudget, ...budgets } = state.budgets;
+  return {
+    ...state,
+    budgets: {
+      ...budgets,
+      [monthKey]: { ...monthlyBudget, categories: newCategories },
+    },
   };
 }
 
@@ -228,6 +299,16 @@ function budgetReducer(state: BudgetState, action: Action): BudgetState {
         ...category,
         amount: action.payload.amount,
       }));
+    case ACTION_COPY_PREV_MONTH_BUDGET:
+      return copyPrevMonthBudget(state, action.payload.monthKey);
+    case ACTION_SETTINGS_SET_BUDGET_CATEGORIES:
+      return {
+        ...state,
+        settings: {
+          ...state.settings,
+          budgetCategories: action.payload,
+        },
+      };
     case ACTION_SET_NAME:
       return {
         ...state,
@@ -320,6 +401,16 @@ function budgetReducer(state: BudgetState, action: Action): BudgetState {
           collapsedCategories: (state.settings.collapsedCategories || [])
             .filter((id) => id !== action.payload.id)
             .concat(action.payload.collapsed ? [action.payload.id] : []),
+        },
+      };
+    case ACTION_SETTINGS_SET_CATEGORY_EXPANDED:
+      return {
+        ...state,
+        settings: {
+          ...state.settings,
+          expandedCategories: (state.settings.expandedCategories || [])
+            .filter((id) => id !== action.payload.id)
+            .concat(action.payload.expanded ? [action.payload.id] : []),
         },
       };
   }

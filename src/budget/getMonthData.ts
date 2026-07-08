@@ -1,6 +1,7 @@
-import { format } from 'date-fns/esm';
+import format from 'date-fns/format';
 import memoize from 'memoize-one';
-import { Balance, Category } from '../moneymoney';
+import { Balance, AmountWithTransactions } from '../moneymoney';
+import { BudgetDisplayCategory } from './deriveBudgetCategories';
 import {
   Budget,
   IncomeCategory,
@@ -69,9 +70,13 @@ function emptyBudgetRow(): BudgetRow {
   return { budgeted: 0, spend: 0, balance: 0 };
 }
 
+function emptyAmount(): AmountWithTransactions {
+  return { amount: 0, transactions: [] };
+}
+
 type GetCategoryRowsArgs = {
   overspendRolloverState: OverspendRollover;
-  categories: Category[];
+  categories: BudgetDisplayCategory[];
   balance?: Balance;
   budget?: Budget;
   round: (value: number) => number;
@@ -94,9 +99,30 @@ function getCategoryRows({
   const newOverspendRolloverState: OverspendRollover = {};
   const rollover: Rollover = { total: 0 };
 
-  const cats = categories.map(({ group, uuid, indentation, name }):
+  const cats = categories.map((category):
     | BudgetCategoryGroup
     | BudgetCategoryRow => {
+    const { group, uuid, indentation, name } = category;
+
+    /* read-only breakdown rows only display their own spending and never
+       contribute to any parent/total (their aggregate line already does) */
+    if (!group && category.readOnly) {
+      const spend = (balance && balance.categories[uuid]) || emptyAmount();
+      return {
+        name,
+        indentation,
+        uuid,
+        group: false as const,
+        readOnly: true,
+        aggregateParent: category.aggregateParent,
+        overspendRollover: false,
+        budgeted: 0,
+        spend: round(spend.amount),
+        balance: 0,
+        transactions: spend.transactions,
+      };
+    }
+
     parentRows.splice(indentation + 1);
     if (group) {
       const row = {
@@ -113,10 +139,19 @@ function getCategoryRows({
         amount: 0,
       };
       const budgeted = budgetCat.amount || 0;
-      const spend = (balance && balance.categories[uuid]) || {
-        amount: 0,
-        transactions: [],
-      };
+      /* an aggregate line sums the spending of its member subcategories */
+      const spend: AmountWithTransactions = category.members
+        ? category.members.reduce((memo, member) => {
+            const memberBalance = balance && balance.categories[member];
+            if (memberBalance) {
+              memo.amount += memberBalance.amount;
+              memo.transactions = memo.transactions.concat(
+                memberBalance.transactions,
+              );
+            }
+            return memo;
+          }, emptyAmount())
+        : (balance && balance.categories[uuid]) || emptyAmount();
 
       const overspendRolloverSetting = budgetCat.rollover;
       const overspendRollover =
@@ -145,6 +180,7 @@ function getCategoryRows({
         indentation,
         overspendRollover,
         group: false as const,
+        aggregate: category.aggregate,
         budgeted: round(budgeted),
         spend: round(spend.amount),
         balance: budgetCategoryBalance,

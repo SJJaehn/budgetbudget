@@ -1,6 +1,6 @@
 {
   "name": "budgetbudget",
-  "productName": "BudgetBudget",
+  "productName": "BudgetBudget Beta",
   "version": "0.0.0-development",
   "description": "work with monthly budgets alongside moneymoney",
   "scripts": {
@@ -21,7 +21,7 @@
   },
   "main": "public/electron.js",
   "build": {
-    "appId": "app.budgetbudget.budgetbudget",
+    "appId": "app.budgetbudget.beta",
     "files": [
       "build/**/*",
       "main/dist.js",
@@ -130,8 +130,8 @@
     "get-port-cli": "1.1.0",
     "istextorbinary": "6.0.0",
     "memfs": "3.2.2",
-    "node-sass": "5.0.0",
     "react-scripts": "4.0.3",
+    "sass": "1.77.8",
     "semantic-release": "17.4.2",
     "serve": "11.3.2",
     "ts-loader": "8.3.0",

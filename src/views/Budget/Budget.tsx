@@ -95,6 +95,7 @@ export default function Budget({
               budgetName={state.name}
               dispatch={dispatch}
               collapsedCategories={state.settings.collapsedCategories}
+              expandedCategories={state.settings.expandedCategories}
               categories={categories || []}
             />
             <InfiniteSlider
@@ -119,6 +120,7 @@ export default function Budget({
                   date={month.date}
                   dispatch={dispatch}
                   collapsedCategories={state.settings.collapsedCategories}
+                  expandedCategories={state.settings.expandedCategories}
                   month={month}
                   categories={categories || []}
                   numberFormatter={numberFormatter}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Props } from './Types';
 import IncomeCategories from './IncomeCategories';
+import BudgetCategories from './BudgetCategories';
 import { MoneyMoneyRes } from '../../../moneymoney';
 
 export default function CategorySettings({
@@ -11,5 +12,10 @@ export default function CategorySettings({
 }) {
   const [categories] = readCategories();
 
-  return <IncomeCategories {...props} categories={categories} />;
+  return (
+    <>
+      <IncomeCategories {...props} categories={categories} />
+      <BudgetCategories {...props} categories={categories} />
+    </>
+  );
 }

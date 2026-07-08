@@ -14,7 +14,7 @@ function addStdErr(err: Error, stderr?: string): ErrWithStdErr {
 export default function osascript(scriptFile: string, ...args: string[]) {
   return new Promise<string>((resolve, reject) => {
     exec(
-      `osascript ${scriptFile} ${args
+      `osascript "${scriptFile.replace(/"/g, '\\"')}" ${args
         .map((arg) => `"${arg.replace(/"/g, '\\"')}"`)
         .join(' ')}`,
       { maxBuffer: 100 * MB },

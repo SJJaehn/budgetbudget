@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import {
   ACTION_SET_CATEGORY_VALUE,
   ACTION_SET_CATEGORY_ROLLOVER,
+  ACTION_COPY_PREV_MONTH_BUDGET,
 } from '../../budget';
 import { Props } from './Types';
 
@@ -29,6 +30,12 @@ export default function useSetBudgeted({
             monthKey,
             categoryId: id,
           },
+        });
+      },
+      copyPrevMonthBudget() {
+        dispatch({
+          type: ACTION_COPY_PREV_MONTH_BUDGET,
+          payload: { monthKey },
         });
       },
     }),

@@ -21,10 +21,21 @@
   padding-bottom: calc(300px - var(--month-header-height));
   transition: padding 200ms ease-out;
 }
+.titleRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .title {
   text-align: center;
   margin: 0;
   padding: 0.5rem 0;
+}
+.copyPrevMonthButton {
+  position: absolute;
+  right: 0;
+  font-size: 0.8em;
 }
 .header {
   position: sticky;
@@ -105,6 +116,12 @@
     &:first-child {
       width: calc(100% / 3 + 0.5rem - 3px);
     }
+  }
+}
+.readOnlyRow {
+  span {
+    color: var(--secondary-color);
+    font-style: italic;
   }
 }
 .budgetRowGroup {

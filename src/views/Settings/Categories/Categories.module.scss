@@ -28,3 +28,33 @@
   padding-right: 0.5rem;
   margin-right: 0.5rem;
 }
+.budgetCategoriesHint {
+  margin: 0 0 0.75rem;
+  color: var(--secondary-color);
+  font-style: italic;
+}
+.budgetCategoryList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.budgetCategoryEntry {
+  display: inline-flex;
+  align-items: center;
+  margin-left: calc(var(--indentation) * 1em);
+  input {
+    margin: 0 0.4rem 0 0;
+  }
+}
+.budgetCategoryGroup {
+  font-weight: bold;
+}
+.budgetCategoryCovered {
+  color: var(--secondary-color);
+}
+.budgetCategoryIcon {
+  height: 1em;
+  width: 1em;
+  margin: 0 0.4rem 0 0.2rem;
+  transform: translate(0, 0.05em) scale(1.2);
+}
